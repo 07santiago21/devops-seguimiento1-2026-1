@@ -23,7 +23,7 @@ type (
 	}
 )
 
-func handler(s Service) *Endpoints {
+func Handler(s Service) *Endpoints {
 	return &Endpoints{
 		Create: makeCreateHandler(s),
 	}
