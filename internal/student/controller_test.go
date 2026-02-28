@@ -35,3 +35,17 @@ func TestController_Create(t *testing.T) {
 
 	ast.Equal(http.StatusCreated, rr.Code)
 }
+
+func TestController_Errors(t *testing.T) {
+	ast := assert.New(t)
+	svc := &MockSvc{}
+	handler := makeCreateHandler(svc)
+
+	body := []byte(`{"name": "Juan", "last_name": "Perez", "age": "veinte"}`)
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+
+	handler(rr, req)
+	ast.Equal(http.StatusBadRequest, rr.Code)
+
+}
