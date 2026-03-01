@@ -48,7 +48,7 @@ jobs:
             echo "¡Validación exitosa! Cobertura del $total% cumple con el requisito."
           fi
       - name: Deploy to Render
-        if: github.event_name == 'push' && success()
+        if: success()
         run: |
           echo "Desplegando a Render "
           curl -sS "${{ secrets.RENDER_DEPLOY_HOOK_MAIN }}"
