@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
+      - name: Validate Docker Build
+        run: docker build -t temp-build-check .
+
       - name: Build
         run: go build ./...
 
@@ -46,3 +49,8 @@ jobs:
           else
             echo "¡Validación exitosa! Cobertura del $total% cumple con el requisito."
           fi
+      - name: Deploy to Render
+        if: github.event_name == 'push' && success()
+        run: |
+          echo "Desplegando a Render "
+          curl -sS "${{ secrets.RENDER_DEPLOY_HOOK }}"
