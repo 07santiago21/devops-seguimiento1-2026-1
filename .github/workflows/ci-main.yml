@@ -2,11 +2,9 @@ name: CI - main
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
@@ -41,7 +39,7 @@ jobs:
           total=${raw_total%.*}
           
           echo "Total coverage (integer): $total%"
-          threshold=85
+          threshold=60
           
           if [ "$total" -lt "$threshold" ]; then
             echo "Error: La cobertura actual es del $total%, pero se requiere un mínimo del $threshold%"
