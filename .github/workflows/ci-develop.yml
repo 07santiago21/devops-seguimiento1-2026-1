@@ -1,0 +1,56 @@
+name: CI - Develop (Pruebas)
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Validate Docker Build
+        run: docker build -t temp-build-check .
+
+      - name: Build
+        run: go build ./...
+
+      - name: Run tests with coverage
+        run: |
+          go test ./... -coverprofile=coverage.out
+
+      - name: Check coverage >= 60%
+        run: |
+          raw_total=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          
+          total=${raw_total%.*}
+          
+          echo "Total coverage (integer): $total%"
+          threshold=60
+          
+          if [ "$total" -lt "$threshold" ]; then
+            echo "Error: La cobertura actual es del $total%, pero se requiere un mínimo del $threshold%"
+            exit 1
+          else
+            echo "¡Validación exitosa! Cobertura del $total% cumple con el requisito."
+          fi
+      - name: Deploy to Render
+        if: github.event_name == 'push' && success()
+        run: |
+          echo "Desplegando a Render "
+          curl -sS "${{ secrets.RENDER_DEPLOY_HOOK }}"
