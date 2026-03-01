@@ -37,5 +37,5 @@ func main() {
 }
 
 func autoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(&student.Student{})
+	return db.Session(&gorm.Session{PrepareStmt: false}).AutoMigrate(&student.Student{})
 }
