@@ -6,6 +6,7 @@ type Service interface {
 	Create(name, lastName string, age int32) (*Student, error)
 	GetAll() ([]Student, error)
 	Get(id string) (*Student, error)
+	Delete(id string) error
 }
 
 type service struct {
@@ -63,4 +64,9 @@ func (s *service) Get(id string) (*Student, error) {
 	}
 	return student, nil
 
+}
+
+func (s *service) Delete(id string) error {
+
+	return s.repo.Delete(id)
 }

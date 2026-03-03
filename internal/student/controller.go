@@ -14,6 +14,7 @@ type (
 		Create Controller
 		Get    Controller
 		GetAll Controller
+		Delete Controller
 	}
 
 	createRequest struct {
@@ -32,6 +33,7 @@ func Handler(s Service) *Endpoints {
 		Create: makeCreateHandler(s),
 		Get:    makeGetHandler(s),
 		GetAll: makeGetAllHandler(s),
+		Delete: makeDeleteHandler(s),
 	}
 }
 
@@ -96,6 +98,24 @@ func makeGetHandler(s Service) Controller {
 		}
 
 		json.NewEncoder(w).Encode(user)
+
+	}
+
+}
+
+func makeDeleteHandler(s Service) Controller {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		path := mux.Vars(r)
+		id := path["id"]
+		if err := s.Delete(id); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(errorResponse{"user does not exist"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"data": "success"})
 
 	}
 

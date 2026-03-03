@@ -10,6 +10,7 @@ type (
 		Create(student *Student) error
 		GetAll() ([]Student, error)
 		Get(id string) (*Student, error)
+		Delete(id string) error
 	}
 
 	repository struct {
@@ -50,4 +51,14 @@ func (r *repository) Get(id string) (*Student, error) {
 
 	return &student, nil
 
+}
+
+func (r *repository) Delete(id string) error {
+
+	student := Student{ID: id}
+	result := r.db.Delete(&student)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }

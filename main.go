@@ -32,6 +32,7 @@ func main() {
 	router.HandleFunc("/students", handle.Create).Methods("POST")
 	router.HandleFunc("/students", handle.GetAll).Methods("GET")
 	router.HandleFunc("/students/{id}", handle.Get).Methods("GET")
+	router.HandleFunc("/students/{id}", handle.Delete).Methods("DELETE")
 
 	if err := http.ListenAndServe(":8000", router); err != nil {
 		log.Fatal(err)
