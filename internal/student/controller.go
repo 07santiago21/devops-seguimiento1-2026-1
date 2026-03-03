@@ -3,6 +3,8 @@ package student
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -10,6 +12,8 @@ type (
 
 	Endpoints struct {
 		Create Controller
+		Get    Controller
+		GetAll Controller
 	}
 
 	createRequest struct {
@@ -26,6 +30,8 @@ type (
 func Handler(s Service) *Endpoints {
 	return &Endpoints{
 		Create: makeCreateHandler(s),
+		Get:    makeGetHandler(s),
+		GetAll: makeGetAllHandler(s),
 	}
 }
 
@@ -58,4 +64,39 @@ func makeCreateHandler(s Service) Controller {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(student)
 	}
+}
+
+func makeGetAllHandler(s Service) Controller {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		users, err := s.GetAll()
+		if err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(errorResponse{err.Error()})
+			return
+
+		}
+
+		json.NewEncoder(w).Encode(users)
+
+	}
+}
+
+func makeGetHandler(s Service) Controller {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		path := mux.Vars(r)
+		id := path["id"]
+		user, err := s.Get(id)
+		if err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(errorResponse{"user does not exist"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(user)
+
+	}
+
 }

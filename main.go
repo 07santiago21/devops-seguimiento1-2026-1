@@ -30,6 +30,8 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/students", handle.Create).Methods("POST")
+	router.HandleFunc("/students", handle.GetAll).Methods("GET")
+	router.HandleFunc("/students/{id}", handle.Get).Methods("GET")
 
 	if err := http.ListenAndServe(":8000", router); err != nil {
 		log.Fatal(err)
