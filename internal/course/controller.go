@@ -97,9 +97,15 @@ func makeGetHandler(s Service) Controller {
 }
 
 func makeDeleteHandler(s Service) Controller {
-
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		id := mux.Vars(r)["id"]
+		if err := s.Delete(id); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "course not found"})
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
