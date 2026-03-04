@@ -11,6 +11,7 @@ type (
 		GetAll() ([]Student, error)
 		Get(id string) (*Student, error)
 		Delete(id string) error
+		Patch(id string, Name *string, LastName *string, Age *int32) error
 	}
 
 	repository struct {
@@ -61,4 +62,27 @@ func (r *repository) Delete(id string) error {
 		return result.Error
 	}
 	return nil
+}
+
+func (r *repository) Patch(id string, Name *string, LastName *string, Age *int32) error {
+
+	values := make(map[string]interface{})
+
+	if Name != nil {
+		values["Name"] = *Name
+	}
+
+	if LastName != nil {
+		values["LastName "] = *LastName
+	}
+
+	if Age != nil {
+		values["Age"] = *Age
+	}
+
+	if result := r.db.Model(&Student{}).Where("id = ?", id).Updates(values); result.Error != nil {
+		return result.Error
+	}
+	return nil
+
 }

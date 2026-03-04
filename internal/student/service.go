@@ -7,6 +7,7 @@ type Service interface {
 	GetAll() ([]Student, error)
 	Get(id string) (*Student, error)
 	Delete(id string) error
+	Patch(id string, Name *string, LastName *string, Age *int32) error
 }
 
 type service struct {
@@ -69,4 +70,9 @@ func (s *service) Get(id string) (*Student, error) {
 func (s *service) Delete(id string) error {
 
 	return s.repo.Delete(id)
+}
+
+func (s *service) Patch(id string, Name *string, LastName *string, Age *int32) error {
+
+	return s.repo.Patch(id, Name, LastName, Age)
 }
