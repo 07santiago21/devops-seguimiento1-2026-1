@@ -65,7 +65,16 @@ func makeCreateHandler(s Service) Controller {
 
 func makeGetAllHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
+		courses, err := s.GetAll()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(courses)
 	}
 }
 

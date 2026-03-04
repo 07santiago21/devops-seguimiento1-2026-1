@@ -30,12 +30,9 @@ func (r *repository) Create(course *Course) error {
 }
 
 func (r *repository) GetAll() ([]Course, error) {
-	var courses []Course
-	result := r.db.Model(&Course{}).Order("created_at desc").Find(&courses)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return courses, nil
+	var list []Course
+	result := r.db.Order("created_at desc").Find(&list)
+	return list, result.Error
 }
 
 func (r *repository) Get(id string) (*Course, error) {
