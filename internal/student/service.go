@@ -4,6 +4,11 @@ import "errors"
 
 type Service interface {
 	Create(name, lastName string, age int32) (*Student, error)
+	GetAll() ([]Student, error)
+	Get(id string) (*Student, error)
+	Delete(id string) error
+	Patch(id string, Name *string, LastName *string, Age *int32) error
+	Put(id string, Name string, LastName string, Age int32) (*Student, error)
 }
 
 type service struct {
@@ -41,4 +46,55 @@ func (s *service) Create(name, lastName string, age int32) (*Student, error) {
 	}
 
 	return student, nil
+}
+
+func (s *service) GetAll() ([]Student, error) {
+
+	students, err := s.repo.GetAll()
+
+	if err != nil {
+		return nil, err
+	}
+	return students, nil
+}
+
+func (s *service) Get(id string) (*Student, error) {
+	student, err := s.repo.Get(id)
+
+	if err != nil {
+		return nil, err
+	}
+	return student, nil
+
+}
+
+func (s *service) Delete(id string) error {
+
+	return s.repo.Delete(id)
+}
+
+func (s *service) Patch(id string, Name *string, LastName *string, Age *int32) error {
+
+	return s.repo.Patch(id, Name, LastName, Age)
+}
+
+func (s *service) Put(id string, Name string, LastName string, Age int32) (*Student, error) {
+
+	if Name == "" {
+		return nil, errors.New("name is required")
+	}
+
+	if LastName == "" {
+		return nil, errors.New("last_name is required")
+	}
+
+	if Age <= 0 {
+		return nil, errors.New("age must be greater than zero")
+	}
+
+	if err := s.repo.Put(id, Name, LastName, Age); err != nil {
+		return nil, err
+	}
+
+	return s.Get(id)
 }
