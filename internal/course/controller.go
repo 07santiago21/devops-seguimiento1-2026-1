@@ -3,6 +3,8 @@ package course
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -79,11 +81,19 @@ func makeGetAllHandler(s Service) Controller {
 }
 
 func makeGetHandler(s Service) Controller {
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		id := mux.Vars(r)["id"]
 
+		course, err := s.Get(id)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "course not found"})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(course)
 	}
-
 }
 
 func makeDeleteHandler(s Service) Controller {

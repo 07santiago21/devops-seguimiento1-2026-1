@@ -36,12 +36,11 @@ func (r *repository) GetAll() ([]Course, error) {
 }
 
 func (r *repository) Get(id string) (*Course, error) {
-	course := Course{ID: id}
-	result := r.db.First(&course)
-	if result.Error != nil {
-		return nil, result.Error
+	c := Course{ID: id}
+	if err := r.db.First(&c).Error; err != nil {
+		return nil, err
 	}
-	return &course, nil
+	return &c, nil
 }
 
 func (r *repository) Delete(id string) error {
