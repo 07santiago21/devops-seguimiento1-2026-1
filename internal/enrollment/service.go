@@ -1,5 +1,7 @@
 package enrollment
 
+import "errors"
+
 type Service interface {
 	Create(studentID, courseID string, amount float64) (*Enrollment, error)
 	GetAll() ([]Enrollment, error)
@@ -16,6 +18,12 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) Create(studentID, courseID string, amount float64) (*Enrollment, error) {
+	if studentID == "" || courseID == "" {
+		return nil, errors.New("student_id and course_id are required")
+	}
+	if amount < 0 {
+		return nil, errors.New("amount cannot be negative")
+	}
 
 	e := &Enrollment{
 		StudentID:   studentID,
@@ -24,7 +32,7 @@ func (s *service) Create(studentID, courseID string, amount float64) (*Enrollmen
 	}
 
 	if err := s.repo.Create(e); err != nil {
-		return nil, err
+		return nil, errors.New("invalid student_id or course_id: entity not found")
 	}
 	return e, nil
 }
