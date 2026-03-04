@@ -12,7 +12,7 @@ type (
 		Get(id string) (*Course, error)
 		Delete(id string) error
 		Patch(id string, Name *string, Code *string, Credits, capacity *int32) error
-		Put(id string, Name string, Code string, Credits int32) error
+		Put(id string, Name string, Code string, Credits, capacity int32) error
 	}
 
 	repository struct {
@@ -65,17 +65,19 @@ func (r *repository) Patch(id string, name *string, description *string, credits
 	return r.db.Model(&Course{}).Where("id = ?", id).Updates(vals).Error
 }
 
-func (r *repository) Put(id string, Name string, Code string, Credits int32) error {
-	course := Course{
-		ID:      id,
-		Name:    Name,
-		Credits: Credits,
+func (r *repository) Put(id string, name string, description string, credits, capacity int32) error {
+	c := Course{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		Credits:     credits,
+		Capacity:    capacity,
 	}
-	result := r.db.Model(&Course{}).Where("id = ?", id).Updates(course)
-	if result.Error != nil {
-		return result.Error
+	res := r.db.Model(&Course{}).Where("id = ?", id).Updates(c)
+	if res.Error != nil {
+		return res.Error
 	}
-	if result.RowsAffected == 0 {
+	if res.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
 	return nil

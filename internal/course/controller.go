@@ -136,8 +136,30 @@ func makePatchHandler(s Service) Controller {
 	}
 }
 
+type PutRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Credits     int32  `json:"credits"`
+	Capacity    int32  `json:"capacity"`
+}
+
 func makePutHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		w.Header().Set("Content-Type", "application/json")
+		var req PutRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid request format"})
+			return
+		}
+		id := mux.Vars(r)["id"]
+		course, err := s.Put(id, req.Name, req.Description, req.Credits, req.Capacity)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(course)
 	}
 }

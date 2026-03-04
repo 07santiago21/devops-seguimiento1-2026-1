@@ -7,8 +7,8 @@ type Service interface {
 	GetAll() ([]Course, error)
 	Get(id string) (*Course, error)
 	Delete(id string) error
-	Patch(id string, name *string, code *string, credits, capacity *int32) error
-	Put(id string, name string, code string, credits int32) (*Course, error)
+	Patch(id string, name *string, description *string, credits, capacity *int32) error
+	Put(id string, name string, description string, credits, capacity int32) (*Course, error)
 }
 
 type service struct {
@@ -63,15 +63,21 @@ func (s *service) Patch(id string, name *string, description *string, credits *i
 	return s.repo.Patch(id, name, description, credits, capacity)
 }
 
-func (s *service) Put(id string, name string, code string, credits int32) (*Course, error) {
+func (s *service) Put(id, name, description string, credits, capacity int32) (*Course, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
-	if code == "" {
-		return nil, errors.New("code is required")
+	if description == "" {
+		return nil, errors.New("description is required")
+	}
+	if credits <= 0 {
+		return nil, errors.New("credits must be >0")
+	}
+	if capacity <= 0 {
+		return nil, errors.New("capacity must be >0")
 	}
 
-	if err := s.repo.Put(id, name, code, credits); err != nil {
+	if err := s.repo.Put(id, name, description, credits, capacity); err != nil {
 		return nil, err
 	}
 	return s.Get(id)
