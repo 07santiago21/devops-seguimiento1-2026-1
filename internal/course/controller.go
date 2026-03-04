@@ -1,6 +1,7 @@
 package course
 
 import (
+	"encoding/json"
 	"net/http"
 )
 
@@ -32,10 +33,33 @@ func Handler(s Service) *Endpoints {
 	}
 }
 
+type CreateRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Credits     int32  `json:"credits"`
+	Capacity    int32  `json:"capacity"`
+}
+
 func makeCreateHandler(s Service) Controller {
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
+		var req CreateRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid request format"})
+			return
+		}
+
+		course, err := s.Create(req.Name, req.Description, req.Credits, req.Capacity)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: err.Error()})
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(course)
 	}
 }
 

@@ -3,7 +3,7 @@ package course
 import "errors"
 
 type Service interface {
-	Create(name, code string, credits int32) (*Course, error)
+	Create(name, description string, credits, capacity int32) (*Course, error)
 	GetAll() ([]Course, error)
 	Get(id string) (*Course, error)
 	Delete(id string) error
@@ -19,25 +19,31 @@ func NewService(repo Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) Create(name, code string, credits int32) (*Course, error) {
+func (s *service) Create(name, description string, credits, capacity int32) (*Course, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
-	if code == "" {
-		return nil, errors.New("code is required")
+	if description == "" {
+		return nil, errors.New("description is required")
 	}
 	if credits <= 0 {
 		return nil, errors.New("credits must be greater than zero")
 	}
+	if capacity <= 0 {
+		return nil, errors.New("capacity must be greater than zero")
+	}
 
 	course := &Course{
-		Name:    name,
-		Credits: credits,
+		Name:        name,
+		Description: description,
+		Credits:     credits,
+		Capacity:    capacity,
 	}
 
 	if err := s.repo.Create(course); err != nil {
 		return nil, err
 	}
+
 	return course, nil
 }
 
