@@ -11,7 +11,7 @@ type (
 		GetAll() ([]Course, error)
 		Get(id string) (*Course, error)
 		Delete(id string) error
-		Patch(id string, Name *string, Code *string, Credits *int32) error
+		Patch(id string, Name *string, Code *string, Credits, capacity *int32) error
 		Put(id string, Name string, Code string, Credits int32) error
 	}
 
@@ -48,19 +48,21 @@ func (r *repository) Delete(id string) error {
 	return result.Error
 }
 
-func (r *repository) Patch(id string, Name *string, Code *string, Credits *int32) error {
-	values := make(map[string]interface{})
-	if Name != nil {
-		values["name"] = *Name
+func (r *repository) Patch(id string, name *string, description *string, credits *int32, capacity *int32) error {
+	vals := map[string]interface{}{}
+	if name != nil {
+		vals["name"] = *name
 	}
-	if Code != nil {
-		values["code"] = *Code
+	if description != nil {
+		vals["description"] = *description
 	}
-	if Credits != nil {
-		values["credits"] = *Credits
+	if credits != nil {
+		vals["credits"] = *credits
 	}
-
-	return r.db.Model(&Course{}).Where("id = ?", id).Updates(values).Error
+	if capacity != nil {
+		vals["capacity"] = *capacity
+	}
+	return r.db.Model(&Course{}).Where("id = ?", id).Updates(vals).Error
 }
 
 func (r *repository) Put(id string, Name string, Code string, Credits int32) error {

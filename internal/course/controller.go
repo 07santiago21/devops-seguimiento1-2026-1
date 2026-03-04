@@ -109,11 +109,31 @@ func makeDeleteHandler(s Service) Controller {
 	}
 }
 
+type PatchRequest struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Credits     *int32  `json:"credits"`
+	Capacity    *int32  `json:"capacity"`
+}
+
 func makePatchHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		w.Header().Set("Content-Type", "application/json")
+		var req PatchRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid request format"})
+			return
+		}
+		id := mux.Vars(r)["id"]
+		if err := s.Patch(id, req.Name, req.Description, req.Credits, req.Capacity); err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "course not found"})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "course updated successfully"})
 	}
-
 }
 
 func makePutHandler(s Service) Controller {

@@ -7,7 +7,7 @@ type Service interface {
 	GetAll() ([]Course, error)
 	Get(id string) (*Course, error)
 	Delete(id string) error
-	Patch(id string, name *string, code *string, credits *int32) error
+	Patch(id string, name *string, code *string, credits, capacity *int32) error
 	Put(id string, name string, code string, credits int32) (*Course, error)
 }
 
@@ -59,8 +59,8 @@ func (s *service) Delete(id string) error {
 	return s.repo.Delete(id)
 }
 
-func (s *service) Patch(id string, name *string, code *string, credits *int32) error {
-	return s.repo.Patch(id, name, code, credits)
+func (s *service) Patch(id string, name *string, description *string, credits *int32, capacity *int32) error {
+	return s.repo.Patch(id, name, description, credits, capacity)
 }
 
 func (s *service) Put(id string, name string, code string, credits int32) (*Course, error) {
