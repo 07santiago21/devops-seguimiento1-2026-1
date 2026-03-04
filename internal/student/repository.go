@@ -12,6 +12,7 @@ type (
 		Get(id string) (*Student, error)
 		Delete(id string) error
 		Patch(id string, Name *string, LastName *string, Age *int32) error
+		Put(id string, Name string, LastName string, Age int32) error
 	}
 
 	repository struct {
@@ -85,4 +86,24 @@ func (r *repository) Patch(id string, Name *string, LastName *string, Age *int32
 	}
 	return nil
 
+}
+
+func (r *repository) Put(id string, Name string, LastName string, Age int32) error {
+	student := Student{
+		ID:       id,
+		Name:     Name,
+		LastName: LastName,
+		Age:      Age,
+	}
+
+	result := r.db.Model(&Student{}).Where("id = ?", id).Updates(student)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

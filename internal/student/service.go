@@ -8,6 +8,7 @@ type Service interface {
 	Get(id string) (*Student, error)
 	Delete(id string) error
 	Patch(id string, Name *string, LastName *string, Age *int32) error
+	Put(id string, Name string, LastName string, Age int32) (*Student, error)
 }
 
 type service struct {
@@ -75,4 +76,25 @@ func (s *service) Delete(id string) error {
 func (s *service) Patch(id string, Name *string, LastName *string, Age *int32) error {
 
 	return s.repo.Patch(id, Name, LastName, Age)
+}
+
+func (s *service) Put(id string, Name string, LastName string, Age int32) (*Student, error) {
+
+	if Name == "" {
+		return nil, errors.New("name is required")
+	}
+
+	if LastName == "" {
+		return nil, errors.New("last_name is required")
+	}
+
+	if Age <= 0 {
+		return nil, errors.New("age must be greater than zero")
+	}
+
+	if err := s.repo.Put(id, Name, LastName, Age); err != nil {
+		return nil, err
+	}
+
+	return s.Get(id)
 }
