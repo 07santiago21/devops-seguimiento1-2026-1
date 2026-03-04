@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/course"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/database"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/student"
 	"github.com/gorilla/mux"
@@ -28,6 +29,11 @@ func main() {
 	service := student.NewService(repo)
 	handle := student.Handler(service)
 
+	// Course setup
+	courseRepo := course.NewRepository(db)
+	courseService := course.NewService(courseRepo)
+	courseHandle := course.Handler(courseService)
+
 	router := mux.NewRouter()
 	router.HandleFunc("/students", handle.Create).Methods("POST")
 	router.HandleFunc("/students", handle.GetAll).Methods("GET")
@@ -36,11 +42,18 @@ func main() {
 	router.HandleFunc("/students/{id}", handle.Patch).Methods("PATCH")
 	router.HandleFunc("/students/{id}", handle.Put).Methods("PUT")
 
+	router.HandleFunc("/courses", courseHandle.Create).Methods("POST")
+	router.HandleFunc("/courses", courseHandle.GetAll).Methods("GET")
+	router.HandleFunc("/courses/{id}", courseHandle.Get).Methods("GET")
+	router.HandleFunc("/courses/{id}", courseHandle.Delete).Methods("DELETE")
+	router.HandleFunc("/courses/{id}", courseHandle.Patch).Methods("PATCH")
+	router.HandleFunc("/courses/{id}", courseHandle.Put).Methods("PUT")
+
 	if err := http.ListenAndServe(":8000", router); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func autoMigrate(db *gorm.DB) error {
-	return db.Session(&gorm.Session{PrepareStmt: false}).AutoMigrate(&student.Student{})
+	return db.Session(&gorm.Session{PrepareStmt: false}).AutoMigrate(&student.Student{}, &course.Course{})
 }
