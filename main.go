@@ -56,8 +56,8 @@ func main() {
 
 	router.HandleFunc("/enrollments", enrollEnd.Create).Methods("POST")
 	router.HandleFunc("/enrollments", enrollEnd.GetAll).Methods("GET")
-	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("GET")
-	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("DELETE")
+	router.HandleFunc("/enrollments/{id}", enrollEnd.Get).Methods("GET")
+	router.HandleFunc("/enrollments/{id}", enrollEnd.Delete).Methods("DELETE")
 	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("PATCHT")
 	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("PUT")
 

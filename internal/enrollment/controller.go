@@ -3,6 +3,8 @@ package enrollment
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -52,13 +54,28 @@ func makeCreateHandler(s Service) Controller {
 
 func makeGetAllHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		enrollments, err := s.GetAll()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "could not fetch enrollments"})
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(enrollments)
 	}
 }
 
 func makeGetHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		id := mux.Vars(r)["id"]
+		e, err := s.Get(id)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "enrollment not found"})
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(e)
 	}
 }
 

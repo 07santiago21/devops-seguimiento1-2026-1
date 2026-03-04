@@ -27,13 +27,13 @@ func (r *repo) Create(e *Enrollment) error {
 
 func (r *repo) GetAll() ([]Enrollment, error) {
 	var enrollments []Enrollment
-	err := r.db.Order("created_at desc").Find(&enrollments).Error
+	err := r.db.Preload("Student").Preload("Course").Order("created_at desc").Find(&enrollments).Error
 	return enrollments, err
 }
 
 func (r *repo) Get(id string) (*Enrollment, error) {
 	var e Enrollment
-	if err := r.db.Where("id = ?", id).First(&e).Error; err != nil {
+	if err := r.db.Preload("Student").Preload("Course").Where("id = ?", id).First(&e).Error; err != nil {
 		return nil, err
 	}
 	return &e, nil
