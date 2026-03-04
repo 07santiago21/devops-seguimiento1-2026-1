@@ -58,8 +58,8 @@ func main() {
 	router.HandleFunc("/enrollments", enrollEnd.GetAll).Methods("GET")
 	router.HandleFunc("/enrollments/{id}", enrollEnd.Get).Methods("GET")
 	router.HandleFunc("/enrollments/{id}", enrollEnd.Delete).Methods("DELETE")
-	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("PATCHT")
-	router.HandleFunc("/enrollments/{id}", enrollEnd.GetAll).Methods("PUT")
+	router.HandleFunc("/enrollments/{id}", enrollEnd.Patch).Methods("PATCH")
+	router.HandleFunc("/enrollments/{id}", enrollEnd.Put).Methods("PUT")
 
 	if err := http.ListenAndServe(":8000", router); err != nil {
 		log.Fatal(err)
