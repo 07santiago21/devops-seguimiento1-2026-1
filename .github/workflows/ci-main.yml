@@ -39,7 +39,7 @@ jobs:
           total=${raw_total%.*}
           
           echo "Total coverage (integer): $total%"
-          threshold=80
+          threshold=85
           
           if [ "$total" -lt "$threshold" ]; then
             echo "Error: La cobertura actual es del $total%, pero se requiere un mínimo del $threshold%"
