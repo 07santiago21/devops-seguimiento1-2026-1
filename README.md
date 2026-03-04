@@ -1,72 +1,76 @@
 # DevOps - Seguimiento #1 (2026-1)
 
-## Project Overview
+## 📋 Project Overview
 
-This project consists of building a RESTful API using Go (net/http) with real database persistence
+This project consists of building a RESTful API using Go (net/http) with real database persistence. The application is designed to manage students, courses, and enrollments, ensuring high quality through automated testing and CI/CD practices.
 
-The application will be deployed in two independent environments:
+The application is deployed in two independent environments:
 
-- 🧪 Test Environment
-- 🚀 Production Environment
-
-Each environment will have:
-- Independent deployment
-- Independent database
-- Independent environment variables
-- Independent CI/CD pipeline
-
-The project will include:
-- Version control with Git (GitMoji convention)
-- CI/CD pipelines
-- Minimum test coverage requirements
-
+- 🧪 **Test Environment:** 
+- 🚀 **Production Environment:** 
 
 ---
 
-## Tech Stack
+## 🌐 Environments & Deployment
 
-- **Language:** Go
-- **HTTP:** net/http
+| Environment | URL |
+| :--- | :--- |
+| **🧪 Test** | `https://devops-seguimiento1-2026-1-develop.onrender.com` | 
+| **🚀 Production** | `https://devops-seguimiento1-2026-1-main.onrender.com` |
+---
+
+## 🚀 Tech Stack
+
+- **Language:** Go (1.21+)
+- **HTTP Router:** gorilla/mux
 - **Database:** PostgreSQL
 - **ORM:** GORM
-- **CI/CD:** GitHub Actions (to be implemented)
+- **CI/CD:** GitHub Actions
+- **Testing:** Testify, SQLMock
 
 ---
 
-## Entities
+##  API Endpoints
 
-The API will manage the following entities:
+### 👨‍🎓 Students
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/students` | Register a new student |
+| `GET` | `/students` | List all students |
+| `GET` | `/students/{id}` | Get student details |
+| `PATCH` | `/students/{id}` | Partial update |
+| `PUT` | `/students/{id}` | Full update |
+| `DELETE` | `/students/{id}` | Remove student |
 
-### 1️⃣ Student
-- id (UUID)
-- name
-- last_name
-- age
-- created_at
+### 📚 Courses
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/courses` | Create a new course |
+| `GET` | `/courses` | List all courses |
+| `GET` | `/courses/{id}` | Get course details |
+| `PATCH` | `/courses/{id}` | Partial update |
+| `PUT` | `/courses/{id}` | Full update |
+| `DELETE` | `/courses/{id}` | Remove course |
 
-### 2️⃣ Course
-- id (UUID)
-- name
-- description
-- credits
-- capacity
-- created_at
+### 📝 Enrollments
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/enrollments` | Enroll a student in a course |
+| `GET` | `/enrollments` | List all enrollments |
+| `GET` | `/enrollments/{id}` | Get enrollment details |
+| `PATCH` | `/enrollments/{id}` | Update total amount/status |
+| `PUT` | `/enrollments/{id}` | Replace enrollment data |
+| `DELETE` | `/enrollments/{id}` | Cancel enrollment |
 
-### 3️⃣ Enrollment
-- id (UUID)
-- student_id (FK)
-- course_id (FK)
-- status (active / completed / cancelled)
-- enrollment_date
-- total_amount
+---
 
-## Environment Variables
+## ⚙️ Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory to manage your local configuration:
 
 ```env
-DATABASE_HOST=
-DATABASE_PORT=
-DATABASE_USER=
-DATABASE_PASSWORD=
-DATABASE_NAME=
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=your_user
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=your_db
