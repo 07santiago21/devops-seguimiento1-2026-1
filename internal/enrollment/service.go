@@ -46,5 +46,8 @@ func (s *service) Get(id string) (*Enrollment, error) {
 }
 
 func (s *service) Delete(id string) error {
+	if id == "" {
+		return errors.New("enrollment ID is required")
+	}
 	return s.repo.Delete(id)
 }

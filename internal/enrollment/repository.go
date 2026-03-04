@@ -40,5 +40,15 @@ func (r *repo) Get(id string) (*Enrollment, error) {
 }
 
 func (r *repo) Delete(id string) error {
-	return r.db.Delete(&Enrollment{}, "id = ?", id).Error
+	result := r.db.Delete(&Enrollment{}, "id = ?", id)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

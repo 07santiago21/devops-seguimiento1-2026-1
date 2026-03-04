@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 type (
@@ -81,6 +82,20 @@ func makeGetHandler(s Service) Controller {
 
 func makeDeleteHandler(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
 
+		err := s.Delete(id)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(map[string]string{"error": "enrollment not found"})
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "could not delete enrollment"})
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
