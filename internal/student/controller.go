@@ -88,12 +88,13 @@ func makeGetAllHandler(s Service) Controller {
 
 		users, err := s.GetAll()
 		if err != nil {
-			w.WriteHeader(400)
+			w.WriteHeader(500)
 			json.NewEncoder(w).Encode(ErrorResponse{err.Error()})
 			return
 
 		}
 
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(users)
 
 	}
@@ -130,7 +131,7 @@ func makeDeleteHandler(s Service) Controller {
 			return
 		}
 
-		json.NewEncoder(w).Encode(map[string]string{"data": "success"})
+		w.WriteHeader(http.StatusNoContent)
 
 	}
 }
