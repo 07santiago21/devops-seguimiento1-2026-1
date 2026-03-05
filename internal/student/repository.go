@@ -74,7 +74,7 @@ func (r *repository) Patch(id string, Name *string, LastName *string, Age *int32
 	}
 
 	if LastName != nil {
-		values["LastName "] = *LastName
+		values["LastName"] = *LastName
 	}
 
 	if Age != nil {
