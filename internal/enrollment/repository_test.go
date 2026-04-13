@@ -123,7 +123,7 @@ func TestRepository_Queries(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
-		err := r.Patch("uuid-1ss", &amt)
+		err := r.Patch("uuid-1", &amt)
 		assert.NoError(t, err)
 	})
 
