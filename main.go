@@ -3,11 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/course"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/database"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/enrollment"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/student"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/gorillamux"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -17,10 +22,12 @@ func main() {
 
 	_ = godotenv.Load()
 
+	log.Println("Connecting to DB...")
 	db, err := database.NewPostgresConnection()
 	if err != nil {
 		log.Fatal("failed to connect to database:", err)
 	}
+	log.Println("Connected to DB")
 
 	if err := autoMigrate(db); err != nil {
 		log.Fatal("failed to migrate database: ", err)
@@ -40,6 +47,7 @@ func main() {
 	enrollEnd := enrollment.MakeEndpoints(enrollSvc)
 
 	router := mux.NewRouter()
+
 	router.HandleFunc("/students", handle.Create).Methods("POST")
 	router.HandleFunc("/students", handle.GetAll).Methods("GET")
 	router.HandleFunc("/students/{id}", handle.Get).Methods("GET")
@@ -61,9 +69,17 @@ func main() {
 	router.HandleFunc("/enrollments/{id}", enrollEnd.Patch).Methods("PATCH")
 	router.HandleFunc("/enrollments/{id}", enrollEnd.Put).Methods("PUT")
 
-	if err := http.ListenAndServe(":8000", router); err != nil {
-		log.Fatal(err)
+	if os.Getenv("AWS_LAMBDA_RUNTIME_API") != "" {
+		log.Println("Running in Lambda")
+		adapter := gorillamux.New(router)
+		lambda.Start(adapter.ProxyWithContext)
+	} else {
+		log.Println("Running locally on :8000")
+		if err := http.ListenAndServe(":8000", router); err != nil {
+			log.Fatal(err)
+		}
 	}
+
 }
 
 func autoMigrate(db *gorm.DB) error {
