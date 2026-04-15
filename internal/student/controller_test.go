@@ -13,6 +13,7 @@ import (
 
 type mockService struct {
 	createFunc func(name, lastName string, age int32) (*Student, error)
+	cuervoFunc func(payload any) ([]byte, error)
 	getAllFunc func() ([]Student, error)
 	getFunc    func(id string) (*Student, error)
 	deleteFunc func(id string) error
@@ -25,6 +26,12 @@ func (m *mockService) Create(name, lastName string, age int32) (*Student, error)
 		return nil, errors.New("not implemented")
 	}
 	return m.createFunc(name, lastName, age)
+}
+func (m *mockService) Cuervo(payload any) ([]byte, error) {
+	if m.cuervoFunc == nil {
+		return nil, errors.New("not implemented")
+	}
+	return m.cuervoFunc(payload)
 }
 
 func (m *mockService) GetAll() ([]Student, error) {
@@ -85,6 +92,58 @@ func TestMakeCreateHandler_InvalidBody(t *testing.T) {
 	handler := makeCreateHandler(mock)
 
 	req := httptest.NewRequest("POST", "/students", bytes.NewReader([]byte("x")))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakeCreateV2Handler(t *testing.T) {
+	mock := &mockService{
+		createFunc: func(name, lastName string, age int32) (*Student, error) {
+			return &Student{ID: "1", Name: name, LastName: lastName, Age: age}, nil
+		},
+		cuervoFunc: func(payload any) ([]byte, error) {
+			return []byte(`{"status":"ok"}`), nil
+		},
+	}
+
+	handler := makeCreateV2Handler(mock)
+	body := CreateRequestV2{
+		Lopez: CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+		Cuervo: CuervoRequest{
+			FullName:    "Juan Cuervo",
+			Email:       "juan@test.com",
+			PhoneNumber: "3001234567",
+		},
+		Lasso: LasoRequest{
+			Nombre:    "Hamburguesa",
+			Direccion: "Calle 1",
+			Telefono:  "1234567",
+		},
+	}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/students/api/v2", bytes.NewReader(b))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected %d got %d", http.StatusCreated, w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"lopez"`)) {
+		t.Fatalf("expected response to include lopez data: %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"cuervo"`)) {
+		t.Fatalf("expected response to include cuervo data: %s", w.Body.String())
+	}
+}
+
+func TestMakeCreateV2Handler_InvalidBody(t *testing.T) {
+	mock := &mockService{}
+	handler := makeCreateV2Handler(mock)
+	req := httptest.NewRequest("POST", "/students/api/v2", bytes.NewReader([]byte("{")))
 	w := httptest.NewRecorder()
 	handler(w, req)
 
@@ -208,6 +267,42 @@ func TestMakePatchHandler_InvalidBody(t *testing.T) {
 	handler(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakePatchHandler_NameRequired(t *testing.T) {
+	mock := &mockService{}
+	handler := makePatchHandler(mock)
+	name := ""
+	body := PatchRequest{Name: &name}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("PATCH", "/students/1", bytes.NewReader(b))
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakePatchHandler_NotFound(t *testing.T) {
+	mock := &mockService{
+		patchFunc: func(id string, name *string, lastName *string, age *int32) error {
+			return errors.New("missing")
+		},
+	}
+	handler := makePatchHandler(mock)
+	name := "Jane"
+	body := PatchRequest{Name: &name}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("PATCH", "/students/1", bytes.NewReader(b))
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected %d got %d", http.StatusNotFound, w.Code)
 	}
 }
 
