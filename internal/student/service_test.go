@@ -122,3 +122,24 @@ func TestServicePut_ValidationErrors(t *testing.T) {
 		t.Error("expected invalid age error")
 	}
 }
+
+func TestServiceGetAll_Error(t *testing.T) {
+	svc := NewService(&mockRepository{
+		getAllFunc: func() ([]Student, error) {
+			return nil, errors.New("db down")
+		},
+	})
+
+	if _, err := svc.GetAll(); err == nil {
+		t.Error("expected get all error to propagate")
+	}
+}
+
+func TestServiceCuervo_MarshalError(t *testing.T) {
+	svc := NewService(&mockRepository{})
+
+	// Channels cannot be JSON-marshaled and should fail before any HTTP request is attempted.
+	if _, err := svc.Cuervo(make(chan int)); err == nil {
+		t.Error("expected marshal error for unsupported payload type")
+	}
+}
