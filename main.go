@@ -54,6 +54,7 @@ func main() {
 	router.HandleFunc("/students/{id}", handle.Delete).Methods("DELETE")
 	router.HandleFunc("/students/{id}", handle.Patch).Methods("PATCH")
 	router.HandleFunc("/students/{id}", handle.Put).Methods("PUT")
+	router.HandleFunc("/api/v2/students", handle.CreateV2).Methods("POST")
 
 	router.HandleFunc("/courses", courseHandle.Create).Methods("POST")
 	router.HandleFunc("/courses", courseHandle.GetAll).Methods("GET")
