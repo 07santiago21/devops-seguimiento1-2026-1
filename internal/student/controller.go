@@ -3,6 +3,7 @@ package student
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -46,6 +47,11 @@ type (
 
 	ErrorResponse struct {
 		Error string `json:"error"`
+	}
+
+	ValidationErrorResponse struct {
+		Error   string            `json:"error"`
+		Details map[string]string `json:"details"`
 	}
 
 	PatchRequest struct {
@@ -122,6 +128,15 @@ func makeCreateV2Handler(s Service) Controller {
 			return
 		}
 
+		if details := validateCreateV2RequiredFields(req); len(details) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ValidationErrorResponse{
+				Error:   "missing or invalid required fields",
+				Details: details,
+			})
+			return
+		}
+
 		payload := map[string]interface{}{
 			"lasso":  req.Lasso,
 			"cuervo": req.Cuervo,
@@ -144,7 +159,7 @@ func makeCreateV2Handler(s Service) Controller {
 		student, err := s.Create(reqStudent.Name, reqStudent.LastName, reqStudent.Age)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[any]interface{}{"lopez": err.Error(), "cuervo": cuervoData})
+			json.NewEncoder(w).Encode(map[string]interface{}{"lopez": err.Error(), "cuervo": cuervoData})
 			return
 		}
 
@@ -156,6 +171,30 @@ func makeCreateV2Handler(s Service) Controller {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+func validateCreateV2RequiredFields(req CreateRequestV2) map[string]string {
+	details := map[string]string{}
+
+	if strings.TrimSpace(req.Lopez.Name) == "" {
+		details["lopez.name"] = "is required"
+	}
+	if strings.TrimSpace(req.Lopez.LastName) == "" {
+		details["lopez.last_name"] = "is required"
+	}
+	if req.Lopez.Age <= 0 {
+		details["lopez.age"] = "must be greater than zero"
+	}
+
+	if req.Cuervo == (CuervoRequest{}) {
+		details["cuervo"] = "is required"
+	}
+
+	if req.Lasso == (LasoRequest{}) {
+		details["lasso"] = "is required"
+	}
+
+	return details
 }
 
 func makeGetAllHandler(s Service) Controller {
