@@ -236,6 +236,38 @@ func TestMakeCreateV2Handler_CuervoError(t *testing.T) {
 	}
 }
 
+func TestValidateCreateV2RequiredFields_MissingCuervoAndLasso(t *testing.T) {
+	req := CreateRequestV2{
+		Lopez: CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+	}
+
+	details := validateCreateV2RequiredFields(req)
+
+	if _, ok := details["cuervo"]; !ok {
+		t.Fatalf("expected cuervo required validation: %v", details)
+	}
+	if _, ok := details["lasso"]; !ok {
+		t.Fatalf("expected lasso required validation: %v", details)
+	}
+}
+
+func TestValidateCreateV2RequiredFields_ValidCuervoAndLasso(t *testing.T) {
+	req := CreateRequestV2{
+		Lopez:  CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+		Cuervo: CuervoRequest{FullName: "Juan", Email: "juan@test.com", PhoneNumber: "3001234567"},
+		Lasso:  LasoRequest{Nombre: "Hamburguesa", Direccion: "Calle 1", Telefono: "1234567"},
+	}
+
+	details := validateCreateV2RequiredFields(req)
+
+	if _, ok := details["cuervo"]; ok {
+		t.Fatalf("did not expect cuervo validation: %v", details)
+	}
+	if _, ok := details["lasso"]; ok {
+		t.Fatalf("did not expect lasso validation: %v", details)
+	}
+}
+
 func TestMakeGetAllHandler(t *testing.T) {
 	expected := []Student{{ID: "1", Name: "John", LastName: "Doe", Age: 25}}
 	mock := &mockService{

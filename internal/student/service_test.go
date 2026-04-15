@@ -2,6 +2,9 @@ package student
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -141,5 +144,29 @@ func TestServiceCuervo_MarshalError(t *testing.T) {
 	// Channels cannot be JSON-marshaled and should fail before any HTTP request is attempted.
 	if _, err := svc.Cuervo(make(chan int)); err == nil {
 		t.Error("expected marshal error for unsupported payload type")
+	}
+}
+
+func TestServiceCuervo_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	oldURL := os.Getenv("URL")
+	defer os.Setenv("URL", oldURL)
+	os.Setenv("URL", server.URL)
+
+	svc := NewService(&mockRepository{})
+	body, err := svc.Cuervo(map[string]any{"foo": "bar"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if string(body) != `{"ok":true}` {
+		t.Fatalf("unexpected response body: %s", string(body))
 	}
 }
