@@ -13,6 +13,7 @@ import (
 
 type mockService struct {
 	createFunc func(name, lastName string, age int32) (*Student, error)
+	cuervoFunc func(payload any) ([]byte, error)
 	getAllFunc func() ([]Student, error)
 	getFunc    func(id string) (*Student, error)
 	deleteFunc func(id string) error
@@ -25,6 +26,12 @@ func (m *mockService) Create(name, lastName string, age int32) (*Student, error)
 		return nil, errors.New("not implemented")
 	}
 	return m.createFunc(name, lastName, age)
+}
+func (m *mockService) Cuervo(payload any) ([]byte, error) {
+	if m.cuervoFunc == nil {
+		return nil, errors.New("not implemented")
+	}
+	return m.cuervoFunc(payload)
 }
 
 func (m *mockService) GetAll() ([]Student, error) {
@@ -62,6 +69,18 @@ func (m *mockService) Put(id, name, lastName string, age int32) (*Student, error
 	return m.putFunc(id, name, lastName, age)
 }
 
+func TestHandler(t *testing.T) {
+	mock := &mockService{}
+	endpoints := Handler(mock)
+
+	if endpoints == nil {
+		t.Fatal("expected non nil endpoints")
+	}
+	if endpoints.Create == nil || endpoints.CreateV2 == nil || endpoints.Get == nil || endpoints.GetAll == nil || endpoints.Delete == nil || endpoints.Patch == nil || endpoints.Put == nil {
+		t.Fatal("expected all endpoint handlers to be initialized")
+	}
+}
+
 func TestMakeCreateHandler(t *testing.T) {
 	mock := &mockService{
 		createFunc: func(name, lastName string, age int32) (*Student, error) {
@@ -90,6 +109,162 @@ func TestMakeCreateHandler_InvalidBody(t *testing.T) {
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakeCreateHandler_MethodNotAllowed(t *testing.T) {
+	mock := &mockService{}
+	handler := makeCreateHandler(mock)
+
+	req := httptest.NewRequest("GET", "/students", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected %d got %d", http.StatusMethodNotAllowed, w.Code)
+	}
+}
+
+func TestMakeCreateHandler_ServiceError(t *testing.T) {
+	mock := &mockService{
+		createFunc: func(name, lastName string, age int32) (*Student, error) {
+			return nil, errors.New("invalid data")
+		},
+	}
+	handler := makeCreateHandler(mock)
+	body := CreateRequest{Name: "John", LastName: "Doe", Age: 25}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/students", bytes.NewReader(b))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakeCreateV2Handler(t *testing.T) {
+	mock := &mockService{
+		createFunc: func(name, lastName string, age int32) (*Student, error) {
+			return &Student{ID: "1", Name: name, LastName: lastName, Age: age}, nil
+		},
+		cuervoFunc: func(payload any) ([]byte, error) {
+			return []byte(`{"status":"ok"}`), nil
+		},
+	}
+
+	handler := makeCreateV2Handler(mock)
+	body := CreateRequestV2{
+		Lopez: CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+		Cuervo: CuervoRequest{
+			FullName:    "Juan Cuervo",
+			Email:       "juan@test.com",
+			PhoneNumber: "3001234567",
+		},
+		Lasso: LasoRequest{
+			Nombre:    "Hamburguesa",
+			Direccion: "Calle 1",
+			Telefono:  "1234567",
+		},
+	}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/students/api/v2", bytes.NewReader(b))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected %d got %d", http.StatusCreated, w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"lopez"`)) {
+		t.Fatalf("expected response to include lopez data: %s", w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"cuervo"`)) {
+		t.Fatalf("expected response to include cuervo data: %s", w.Body.String())
+	}
+}
+
+func TestMakeCreateV2Handler_InvalidBody(t *testing.T) {
+	mock := &mockService{}
+	handler := makeCreateV2Handler(mock)
+	req := httptest.NewRequest("POST", "/students/api/v2", bytes.NewReader([]byte("{")))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakeCreateV2Handler_MethodNotAllowed(t *testing.T) {
+	mock := &mockService{}
+	handler := makeCreateV2Handler(mock)
+	req := httptest.NewRequest("GET", "/students/api/v2", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected %d got %d", http.StatusMethodNotAllowed, w.Code)
+	}
+}
+
+func TestMakeCreateV2Handler_CuervoError(t *testing.T) {
+	mock := &mockService{
+		createFunc: func(name, lastName string, age int32) (*Student, error) {
+			return &Student{ID: "1", Name: name, LastName: lastName, Age: age}, nil
+		},
+		cuervoFunc: func(payload any) ([]byte, error) {
+			return nil, errors.New("cuervo unavailable")
+		},
+	}
+
+	handler := makeCreateV2Handler(mock)
+	body := CreateRequestV2{
+		Lopez:  CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+		Cuervo: CuervoRequest{FullName: "Juan", Email: "juan@test.com", PhoneNumber: "3001234567"},
+		Lasso:  LasoRequest{Nombre: "Hamburguesa", Direccion: "Calle 1", Telefono: "1234567"},
+	}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/students/api/v2", bytes.NewReader(b))
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected %d got %d", http.StatusCreated, w.Code)
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte("cuervo unavailable")) {
+		t.Fatalf("expected cuervo error in response: %s", w.Body.String())
+	}
+}
+
+func TestValidateCreateV2RequiredFields_MissingCuervoAndLasso(t *testing.T) {
+	req := CreateRequestV2{
+		Lopez: CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+	}
+
+	details := validateCreateV2RequiredFields(req)
+
+	if _, ok := details["cuervo"]; !ok {
+		t.Fatalf("expected cuervo required validation: %v", details)
+	}
+	if _, ok := details["lasso"]; !ok {
+		t.Fatalf("expected lasso required validation: %v", details)
+	}
+}
+
+func TestValidateCreateV2RequiredFields_ValidCuervoAndLasso(t *testing.T) {
+	req := CreateRequestV2{
+		Lopez:  CreateRequest{Name: "John", LastName: "Doe", Age: 25},
+		Cuervo: CuervoRequest{FullName: "Juan", Email: "juan@test.com", PhoneNumber: "3001234567"},
+		Lasso:  LasoRequest{Nombre: "Hamburguesa", Direccion: "Calle 1", Telefono: "1234567"},
+	}
+
+	details := validateCreateV2RequiredFields(req)
+
+	if _, ok := details["cuervo"]; ok {
+		t.Fatalf("did not expect cuervo validation: %v", details)
+	}
+	if _, ok := details["lasso"]; ok {
+		t.Fatalf("did not expect lasso validation: %v", details)
 	}
 }
 
@@ -208,6 +383,42 @@ func TestMakePatchHandler_InvalidBody(t *testing.T) {
 	handler(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakePatchHandler_NameRequired(t *testing.T) {
+	mock := &mockService{}
+	handler := makePatchHandler(mock)
+	name := ""
+	body := PatchRequest{Name: &name}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("PATCH", "/students/1", bytes.NewReader(b))
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected %d got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestMakePatchHandler_NotFound(t *testing.T) {
+	mock := &mockService{
+		patchFunc: func(id string, name *string, lastName *string, age *int32) error {
+			return errors.New("missing")
+		},
+	}
+	handler := makePatchHandler(mock)
+	name := "Jane"
+	body := PatchRequest{Name: &name}
+	b, _ := json.Marshal(body)
+	req := httptest.NewRequest("PATCH", "/students/1", bytes.NewReader(b))
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected %d got %d", http.StatusNotFound, w.Code)
 	}
 }
 

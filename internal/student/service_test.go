@@ -2,6 +2,9 @@ package student
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -120,5 +123,50 @@ func TestServicePut_ValidationErrors(t *testing.T) {
 	}
 	if _, err := svc.Put("1", "Jane", "Smith", -1); err == nil {
 		t.Error("expected invalid age error")
+	}
+}
+
+func TestServiceGetAll_Error(t *testing.T) {
+	svc := NewService(&mockRepository{
+		getAllFunc: func() ([]Student, error) {
+			return nil, errors.New("db down")
+		},
+	})
+
+	if _, err := svc.GetAll(); err == nil {
+		t.Error("expected get all error to propagate")
+	}
+}
+
+func TestServiceCuervo_MarshalError(t *testing.T) {
+	svc := NewService(&mockRepository{})
+
+	// Channels cannot be JSON-marshaled and should fail before any HTTP request is attempted.
+	if _, err := svc.Cuervo(make(chan int)); err == nil {
+		t.Error("expected marshal error for unsupported payload type")
+	}
+}
+
+func TestServiceCuervo_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	oldURL := os.Getenv("URL")
+	defer os.Setenv("URL", oldURL)
+	os.Setenv("URL", server.URL)
+
+	svc := NewService(&mockRepository{})
+	body, err := svc.Cuervo(map[string]any{"foo": "bar"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if string(body) != `{"ok":true}` {
+		t.Fatalf("unexpected response body: %s", string(body))
 	}
 }

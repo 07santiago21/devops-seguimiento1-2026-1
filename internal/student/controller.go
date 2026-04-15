@@ -3,6 +3,7 @@ package student
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -11,12 +12,31 @@ type (
 	Controller func(w http.ResponseWriter, r *http.Request)
 
 	Endpoints struct {
-		Create Controller
-		Get    Controller
-		GetAll Controller
-		Delete Controller
-		Patch  Controller
-		Put    Controller
+		Create   Controller
+		CreateV2 Controller
+		Get      Controller
+		GetAll   Controller
+		Delete   Controller
+		Patch    Controller
+		Put      Controller
+	}
+
+	CreateRequestV2 struct {
+		Lopez  CreateRequest `json:"lopez"`
+		Cuervo CuervoRequest `json:"cuervo"`
+		Lasso  LasoRequest   `json:"lasso"`
+	}
+
+	LasoRequest struct {
+		Nombre    string `json:"nombre"`
+		Direccion string `json:"direccion"`
+		Telefono  string `json:"telefono"`
+	}
+
+	CuervoRequest struct {
+		FullName    string `json:"fullName"`
+		Email       string `json:"email"`
+		PhoneNumber string `json:"phone_number"`
 	}
 
 	CreateRequest struct {
@@ -27,6 +47,11 @@ type (
 
 	ErrorResponse struct {
 		Error string `json:"error"`
+	}
+
+	ValidationErrorResponse struct {
+		Error   string            `json:"error"`
+		Details map[string]string `json:"details"`
 	}
 
 	PatchRequest struct {
@@ -43,12 +68,13 @@ type (
 
 func Handler(s Service) *Endpoints {
 	return &Endpoints{
-		Create: makeCreateHandler(s),
-		Get:    makeGetHandler(s),
-		GetAll: makeGetAllHandler(s),
-		Delete: makeDeleteHandler(s),
-		Patch:  makePatchHandler(s),
-		Put:    makePutHandler(s),
+		Create:   makeCreateHandler(s),
+		CreateV2: makeCreateV2Handler(s),
+		Get:      makeGetHandler(s),
+		GetAll:   makeGetAllHandler(s),
+		Delete:   makeDeleteHandler(s),
+		Patch:    makePatchHandler(s),
+		Put:      makePutHandler(s),
 	}
 }
 
@@ -81,6 +107,94 @@ func makeCreateHandler(s Service) Controller {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(student)
 	}
+}
+
+func makeCreateV2Handler(s Service) Controller {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		var req CreateRequestV2
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid request body"})
+			return
+		}
+
+		if details := validateCreateV2RequiredFields(req); len(details) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ValidationErrorResponse{
+				Error:   "missing or invalid required fields",
+				Details: details,
+			})
+			return
+		}
+
+		payload := map[string]interface{}{
+			"lasso":  req.Lasso,
+			"cuervo": req.Cuervo,
+		}
+
+		cuervoResp, err := s.Cuervo(payload)
+
+		var cuervoData interface{}
+
+		if err != nil {
+			cuervoData = map[string]interface{}{
+				"error": err.Error(),
+			}
+		} else {
+			cuervoData = json.RawMessage(cuervoResp)
+		}
+
+		reqStudent := req.Lopez
+
+		student, err := s.Create(reqStudent.Name, reqStudent.LastName, reqStudent.Age)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]interface{}{"lopez": err.Error(), "cuervo": cuervoData})
+			return
+		}
+
+		response := map[string]interface{}{
+			"lopez":  student,
+			"cuervo": cuervoData,
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func validateCreateV2RequiredFields(req CreateRequestV2) map[string]string {
+	details := map[string]string{}
+
+	if strings.TrimSpace(req.Lopez.Name) == "" {
+		details["lopez.name"] = "is required"
+	}
+	if strings.TrimSpace(req.Lopez.LastName) == "" {
+		details["lopez.last_name"] = "is required"
+	}
+	if req.Lopez.Age <= 0 {
+		details["lopez.age"] = "must be greater than zero"
+	}
+
+	if req.Cuervo == (CuervoRequest{}) {
+		details["cuervo"] = "is required"
+	}
+
+	if req.Lasso == (LasoRequest{}) {
+		details["lasso"] = "is required"
+	}
+
+	return details
 }
 
 func makeGetAllHandler(s Service) Controller {
