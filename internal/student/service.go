@@ -1,9 +1,18 @@
 package student
 
-import "errors"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"os"
+)
 
 type Service interface {
 	Create(name, lastName string, age int32) (*Student, error)
+	Cuervo(payload any) ([]byte, error)
+
 	GetAll() ([]Student, error)
 	Get(id string) (*Student, error)
 	Delete(id string) error
@@ -46,6 +55,37 @@ func (s *service) Create(name, lastName string, age int32) (*Student, error) {
 	}
 
 	return student, nil
+}
+
+func (s *service) Cuervo(payload any) ([]byte, error) {
+
+	url := os.Getenv("URL")
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return respBody, nil
 }
 
 func (s *service) GetAll() ([]Student, error) {

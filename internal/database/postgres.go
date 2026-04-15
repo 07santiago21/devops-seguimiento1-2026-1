@@ -11,7 +11,7 @@ import (
 func NewPostgresConnection() (*gorm.DB, error) {
 
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require prepareThreshold=0",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require",
 		os.Getenv("DATABASE_HOST"),
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
