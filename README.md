@@ -4,20 +4,8 @@
 
 This project consists of building a RESTful API using Go (net/http) with real database persistence. The application is designed to manage students, courses, and enrollments, ensuring high quality through automated testing and CI/CD practices.
 
-The application is deployed in two independent environments:
-
-- 🧪 **Test Environment:** 
-- 🚀 **Production Environment:** 
-
 ---
 
-## 🌐 Environments & Deployment
-
-| Environment | URL |
-| :--- | :--- |
-| **🧪 Test** | `https://devops-seguimiento1-2026-1-develop.onrender.com` | 
-| **🚀 Production** | `https://devops-seguimiento1-2026-1-main.onrender.com` |
----
 
 ## 🚀 Tech Stack
 
@@ -41,6 +29,8 @@ The application is deployed in two independent environments:
 | `PATCH` | `/students/{id}` | Partial update |
 | `PUT` | `/students/{id}` | Full update |
 | `DELETE` | `/students/{id}` | Remove student |
+| `POST` | `/api/v2/students` | Register a new student chain |
+
 
 ### 📚 Courses
 | Method | Endpoint | Description |
@@ -64,6 +54,12 @@ The application is deployed in two independent environments:
 
 ---
 
+## ⚙️ Chain Diagram
+
+![Architecture diagram](chain_diagram.png)
+
+---
+
 ## ⚙️ Environment Variables
 
 Create a `.env` file in the root directory to manage your local configuration:
@@ -74,3 +70,6 @@ DATABASE_PORT=5432
 DATABASE_USER=your_user
 DATABASE_PASSWORD=your_password
 DATABASE_NAME=your_db
+URL=url_second_chain
+```
+
