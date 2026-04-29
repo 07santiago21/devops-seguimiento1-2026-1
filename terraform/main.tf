@@ -67,3 +67,22 @@ module "database" {
 
   tags = local.common_tags
 }
+
+module "compute" {
+  source = "./modules/compute"
+
+  lambda_function_name = var.lambda_function_name
+  artifact_path        = var.artifact_path
+
+  subnet_ids             = [module.network.private_subnet_id]
+  vpc_security_group_ids = [module.network.lambda_sg_id]
+
+  database_host     = module.database.endpoint
+  database_user     = module.database.username
+  database_password = module.database.password
+  database_name     = module.database.db_name
+  database_port     = module.database.port
+
+  memory_size = 128
+  timeout     = 10
+}

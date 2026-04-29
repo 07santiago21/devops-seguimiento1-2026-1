@@ -37,3 +37,18 @@ output "database_username" {
   description = "Database username reserved for the PostgreSQL layer."
   value       = var.database_username
 }
+
+output "api_invoke_url" {
+  description = "API Gateway endpoint for the deployed Lambda (prod stage)."
+  value       = module.compute.api_invoke_url
+}
+
+output "lambda_arn" {
+  description = "ARN of the deployed Lambda function."
+  value       = module.compute.lambda_function_arn
+}
+
+output "lambda_name" {
+  description = "Name of the deployed Lambda function."
+  value       = module.compute.lambda_function_name
+}
