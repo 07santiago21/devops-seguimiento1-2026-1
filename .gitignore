@@ -1,1 +1,9 @@
 .env
+# Build / coverage / packaging
+coverage.out
+dist/
+function.zip
+bootstrap
+
+# Terraform local cache (module and provider caches should not be committed)
+terraform/.terraform/
