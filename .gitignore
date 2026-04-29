@@ -1,1 +1,17 @@
 .env
+# Build / coverage / packaging
+coverage.out
+dist/
+function.zip
+bootstrap
+
+# AWS RDS certificate bundle (download with curl if needed)
+global-bundle.pem
+
+# Terraform local cache (module and provider caches should not be committed)
+terraform/.terraform/
+terraform/terraform.tfvars
+
+# Terraform state files (never commit state)
+terraform.tfstate
+terraform.tfstate.backup
