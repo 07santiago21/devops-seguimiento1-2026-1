@@ -36,3 +36,10 @@ locals {
     ManagedBy   = "Terraform"
   }
 }
+
+module "network" {
+  source           = "./modules/network"
+  name_prefix      = local.name_prefix
+  allowed_ssh_cidr = var.allowed_ssh_cidr
+  tags             = local.common_tags
+}
