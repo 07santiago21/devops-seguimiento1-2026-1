@@ -106,17 +106,31 @@ resource "aws_lambda_permission" "apigw" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.this.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.this.id}/*/*/*"
+  source_arn    = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.this.id}/*/*"
 }
 
 resource "aws_api_gateway_deployment" "this" {
   depends_on  = [aws_api_gateway_integration.proxy, aws_api_gateway_integration.root_proxy]
   rest_api_id = aws_api_gateway_rest_api.this.id
-  stage_name  = "prod"
 
   triggers = {
-    redeployment = sha1(join("-", [aws_api_gateway_integration.proxy.id, aws_api_gateway_method.any.id, aws_api_gateway_method.root_any.id]))
+    redeployment = sha1(join("-", [
+      aws_api_gateway_integration.proxy.id,
+      aws_api_gateway_integration.root_proxy.id,
+      aws_api_gateway_method.any.id,
+      aws_api_gateway_method.root_any.id,
+    ]))
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "this" {
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  deployment_id = aws_api_gateway_deployment.this.id
+  stage_name    = "prod"
 }
 
 output "lambda_function_arn" {
@@ -128,5 +142,5 @@ output "lambda_function_name" {
 }
 
 output "api_invoke_url" {
-  value = "https://${aws_api_gateway_rest_api.this.id}.execute-api.${data.aws_region.current.name}.amazonaws.com/${aws_api_gateway_deployment.this.stage_name}"
+  value = aws_api_gateway_stage.this.invoke_url
 }
