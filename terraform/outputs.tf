@@ -52,3 +52,23 @@ output "lambda_name" {
   description = "Name of the deployed Lambda function."
   value       = module.compute.lambda_function_name
 }
+
+output "bastion_public_ip" {
+  description = "Public IP of the bastion host (for SSH access)."
+  value       = module.network.bastion_public_ip
+}
+
+output "bastion_key_name" {
+  description = "EC2 key pair name configured for the bastion host."
+  value       = local.bastion_key_name
+}
+
+output "bastion_public_key_path" {
+  description = "Local public key file imported for the bastion host, if any."
+  value       = var.bastion_public_key_path
+}
+
+output "rds_endpoint" {
+  description = "RDS endpoint address (private, use SSH tunnel)."
+  value       = module.database.endpoint
+}

@@ -13,7 +13,7 @@ variable "project_name" {
 variable "environment" {
   description = "Deployment environment name."
   type        = string
-  default     = "dev"
+  default     = "prod"
 }
 
 
@@ -38,7 +38,7 @@ variable "database_port" {
 variable "lambda_function_name" {
   description = "Lambda function name to be created in the compute module."
   type        = string
-  default     = "api-seguimiento1"
+  default     = "api-seguimiento3"
 }
 
 variable "artifact_path" {
@@ -51,4 +51,36 @@ variable "allowed_ssh_cidr" {
   description = "CIDR allowed to reach the bastion host via SSH."
   type        = string
   default     = "0.0.0.0/0"
+}
+
+variable "bastion_key_name" {
+  description = "Optional EC2 key pair name for bastion SSH access."
+  type        = string
+  default     = ""
+}
+
+variable "bastion_public_key_path" {
+  description = "Path to a local SSH public key to import as the bastion EC2 key pair. Defaults to ~/.ssh/id_rsa.pub."
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "database_password" {
+  description = "Master password for PostgreSQL RDS (provide your own, not auto-generated)."
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_access_key" {
+  description = "Optional AWS access key; prefer env/profile/role instead of using this variable."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "aws_secret_key" {
+  description = "Optional AWS secret key; prefer env/profile/role instead of using this variable."
+  type        = string
+  sensitive   = true
+  default     = null
 }
