@@ -8,6 +8,7 @@ import (
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/course"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/database"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/enrollment"
+	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/health"
 	"github.com/07santiago21/devops-seguimiento1-2026-1/internal/student"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -46,7 +47,15 @@ func main() {
 	enrollSvc := enrollment.NewService(enrollRepo)
 	enrollEnd := enrollment.MakeEndpoints(enrollSvc)
 
+	healthHandler := health.Handler(health.Config{
+		Healthcheck: os.Getenv("HEALTHCHECK"),
+		Version:     os.Getenv("APP_VERSION"),
+		DeployedAt:  os.Getenv("DEPLOYED_AT"),
+		Service:     os.Getenv("SERVICE_NAME"),
+	})
+
 	router := mux.NewRouter()
+	router.HandleFunc("/health", healthHandler).Methods("GET")
 
 	router.HandleFunc("/students", handle.Create).Methods("POST")
 	router.HandleFunc("/students", handle.GetAll).Methods("GET")
