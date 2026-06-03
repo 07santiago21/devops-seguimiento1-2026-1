@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seguimiento-stable-service
+spec:
+  selector:
+    app: seguimiento
+    version: stable
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seguimiento-canary-service
+spec:
+  selector:
+    app: seguimiento
+    version: canary
+  ports:
+    - port: 80
+      targetPort: 8000

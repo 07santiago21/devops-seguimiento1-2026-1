@@ -90,3 +90,19 @@ module "compute" {
   memory_size = 128
   timeout     = 10
 }
+
+module "ecr" {
+  source          = "./modules/ecr"
+  repository_name = "${local.name_prefix}-api"
+  tags            = local.common_tags
+}
+
+module "eks" {
+  source             = "./modules/eks"
+  name_prefix        = local.name_prefix
+  subnet_ids         = module.network.public_subnet_ids
+  rds_sg_id          = module.network.rds_sg_id
+  node_instance_type = var.eks_node_instance_type
+  desired_nodes      = var.eks_desired_nodes
+  tags               = local.common_tags
+}

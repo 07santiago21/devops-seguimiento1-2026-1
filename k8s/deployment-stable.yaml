@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seguimiento-stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: seguimiento
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: seguimiento
+        version: stable
+    spec:
+      containers:
+        - name: seguimiento
+          image: <ECR_URL>:stable
+          ports:
+            - containerPort: 8000
+          env:
+            - name: HEALTHCHECK
+              value: "stable"
+            - name: APP_VERSION
+              value: "1.0.0"
+            - name: SERVICE_NAME
+              value: "seguimiento-api"
+            - name: DATABASE_HOST
+              value: "<RDS_ENDPOINT>"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: "postgres"
+            - name: DATABASE_PASSWORD
+              value: "<DB_PASSWORD>"
+            - name: DATABASE_NAME
+              value: "academia"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
