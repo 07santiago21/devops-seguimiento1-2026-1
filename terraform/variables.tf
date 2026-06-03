@@ -84,3 +84,15 @@ variable "aws_secret_key" {
   sensitive   = true
   default     = null
 }
+
+variable "eks_node_instance_type" {
+  description = "EC2 instance type for EKS worker nodes."
+  type        = string
+  default     = "t3.small"
+}
+
+variable "eks_desired_nodes" {
+  description = "Desired number of EKS worker nodes."
+  type        = number
+  default     = 2
+}
