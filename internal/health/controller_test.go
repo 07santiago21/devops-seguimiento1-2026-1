@@ -9,8 +9,8 @@ import (
 
 func TestHandlerReturnsHealthPayload(t *testing.T) {
 	handler := Handler(Config{
-		Healthcheck: "canary",
-		Version:     "1.2.0",
+		Healthcheck: "canary-juan",
+		Version:     "1.2.1",
 		DeployedAt:  "2026-06-02T10:00:00Z",
 		Service:     "students-api",
 	})
