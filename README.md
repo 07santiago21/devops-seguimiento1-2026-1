@@ -48,6 +48,37 @@ API Gateway  ──────────────────►  Lambda (
 
 ## Endpoints de la API
 
+### Health check
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/health` | Devuelve `status`, `healthcheck`, `version`, `deployed_at` y `service` |
+| `GET` | `/healthz` | Alias del health check |
+
+Ejemplo de respuesta para la versión stable:
+
+```json
+{
+       "status": "ok",
+       "healthcheck": "stable",
+       "version": "1.0.0",
+       "deployed_at": "2026-06-02T10:00:00Z",
+       "service": "students-api"
+}
+```
+
+Ejemplo de respuesta para la versión canary:
+
+```json
+{
+       "status": "ok",
+       "healthcheck": "canary",
+       "version": "1.1.0-canary",
+       "deployed_at": "2026-06-02T12:00:00Z",
+       "service": "students-api"
+}
+```
+
 ### Estudiantes
 
 | Método | Ruta | Descripción |
